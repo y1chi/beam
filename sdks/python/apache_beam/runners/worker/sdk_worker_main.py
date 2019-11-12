@@ -38,6 +38,7 @@ from apache_beam.portability.api import endpoints_pb2
 from apache_beam.runners.internal import names
 from apache_beam.runners.worker.log_handler import FnApiLogRecordHandler
 from apache_beam.runners.worker.sdk_worker import SdkHarness
+from apache_beam.runners.worker.worker_status import FnApiWorkerStatusHandler
 from apache_beam.utils import profiler
 
 # This module is experimental. No backwards-compatibility guarantees.
@@ -98,6 +99,7 @@ def main(unused_argv):
 
       # Send all logs to the runner.
       fn_log_handler = FnApiLogRecordHandler(logging_service_descriptor)
+      fn_status_handler =  FnApiWorkerStatusHandler(logging_service_descriptor)
       # TODO(BEAM-5468): This should be picked up from pipeline options.
       logging.getLogger().setLevel(logging.INFO)
       logging.getLogger().addHandler(fn_log_handler)
@@ -106,8 +108,10 @@ def main(unused_argv):
       logging.error("Failed to set up logging handler, continuing without.",
                     exc_info=True)
       fn_log_handler = None
+      fn_status_handler = None
   else:
     fn_log_handler = None
+    fn_status_handler = None
 
   # Start status HTTP server thread.
   thread = threading.Thread(name='status_http_server',
@@ -160,6 +164,8 @@ def main(unused_argv):
   finally:
     if fn_log_handler:
       fn_log_handler.close()
+    if fn_status_handler:
+      fn_status_handler.close()
 
 
 def _parse_pipeline_options(options_json):
