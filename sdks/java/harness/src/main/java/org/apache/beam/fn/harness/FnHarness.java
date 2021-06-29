@@ -31,6 +31,7 @@ import org.apache.beam.fn.harness.control.AddHarnessIdInterceptor;
 import org.apache.beam.fn.harness.control.BeamFnControlClient;
 import org.apache.beam.fn.harness.control.FinalizeBundleHandler;
 import org.apache.beam.fn.harness.control.ProcessBundleHandler;
+import org.apache.beam.fn.harness.control.ProcessDataBundleHandler;
 import org.apache.beam.fn.harness.data.BeamFnDataGrpcClient;
 import org.apache.beam.fn.harness.logging.BeamFnLoggingClient;
 import org.apache.beam.fn.harness.state.BeamFnStateGrpcClientCache;
@@ -272,6 +273,15 @@ public class FnHarness {
               finalizeBundleHandler,
               metricsShortIds);
 
+      ProcessDataBundleHandler processDataBundleHandler =
+          new ProcessDataBundleHandler(
+              options,
+              runnerCapabilites,
+              processBundleDescriptors::getUnchecked,
+              beamFnStateGrpcClientCache,
+              finalizeBundleHandler,
+              metricsShortIds);
+
       BeamFnStatusClient beamFnStatusClient = null;
       if (statusApiServiceDescriptor != null) {
         beamFnStatusClient =
@@ -294,6 +304,9 @@ public class FnHarness {
       handlers.put(
           BeamFnApi.InstructionRequest.RequestCase.PROCESS_BUNDLE,
           processBundleHandler::processBundle);
+      handlers.put(
+          BeamFnApi.InstructionRequest.RequestCase.PROCESS_DATA_BUNDLE,
+          processDataBundleHandler::processDataBundle);
       handlers.put(
           BeamFnApi.InstructionRequest.RequestCase.PROCESS_BUNDLE_PROGRESS,
           processBundleHandler::progress);
